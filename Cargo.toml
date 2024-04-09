@@ -1,0 +1,29 @@
+[package]
+name = "simple-feed-poster-rust"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+syndication = { git = "https://github.com/rust-syndication/syndication.git", rev = "bc75ebef2da4cc430e8676ce4d9b892f24f5cf52" }
+rss = { version = "2.0.7", default-features = false }
+atom_syndication = { version = "0.12.2", default-features = false }
+
+strfmt = "0.2.4"
+dotenvy = "0.15.7"
+
+log = "0.4.21"
+moko256_systemd_stdio_logger = { git = "https://github.com/moko256/moko256_systemd_stdio_logger_rust.git", tag = "v1.0.1" }
+
+chrono = { version = "0.4.35", default-features = false, features = [
+    "clock",
+    "std",
+] }
+
+tokio = { version = "1.36.0", features = ["macros", "rt"] }
+
+reqwest = { version = "0.11.27", default-features = false, features = [
+    "native-tls",
+    "gzip",
+] }
