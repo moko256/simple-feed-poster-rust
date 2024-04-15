@@ -1,9 +1,14 @@
+mod app_misskey_post;
 mod app_show;
 mod app_watch;
 mod config;
+mod feed_diff;
 mod feed_fetch;
-mod feed_parse;
 mod feed_formatter;
+mod feed_parse;
+mod misskey_post;
+mod schedules;
+mod sleep;
 
 use std::env;
 
@@ -19,18 +24,21 @@ async fn main() {
         Some(command) => match command.as_str() {
             "watch" => {
                 app_watch::app_main(&args, &config).await;
-                return;
             }
             "show" => {
                 app_show::app_main(&args, &config).await;
-                return;
             }
-            _ => {}
+            "post" => {
+                app_misskey_post::app_main(&args, &config).await;
+            }
+            _ => {
+                print_help();
+            }
         },
-        None => {}
+        None => {
+            print_help();
+        }
     }
-
-    print_help();
 }
 
 fn print_help() {
@@ -39,4 +47,5 @@ fn print_help() {
     println!("Commands:");
     println!("  show      Show all feed.");
     println!("  watch     Start watching feed and post new articles.");
+    println!("  post      Post to misskey.");
 }

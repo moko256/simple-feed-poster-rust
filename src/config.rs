@@ -1,21 +1,27 @@
-use std::{env, error::Error};
+use std::env;
 
 use dotenvy::dotenv;
 
 pub struct Config {
-    pub message_format: String,
-    pub post_url: String,
-    pub post_body_type: String,
-    pub post_body: String,
+    pub dryrun: bool,
+    pub feed_url: String,
+    pub post_misskey_host: String,
+    pub post_misskey_api_token: String,
+    pub cron: Vec<String>,
 }
 
 pub fn load_config() -> Config {
     dotenv().unwrap();
 
     Config {
-        message_format: env::var("MESSAGE_FORMAT").unwrap(),
-        post_url: env::var("POST_URL").unwrap(),
-        post_body_type: env::var("POST_BODY_TYPE").unwrap(),
-        post_body: env::var("POST_BODY").unwrap(),
+        dryrun: env::var("DRYRUN").unwrap().parse().unwrap(),
+        feed_url: env::var("FEED_URL").unwrap(),
+        post_misskey_host: env::var("POST_MISSKEY_HOST").unwrap(),
+        post_misskey_api_token: env::var("POST_MISSKEY_API_TOKEN").unwrap(),
+        cron: env::var("CRON")
+            .unwrap()
+            .split("|")
+            .map(|s| s.trim().to_string())
+            .collect(),
     }
 }

@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use chrono::{DateTime, Utc};
-use reqwest::{header::HeaderMap, Client};
+use reqwest::{header::HeaderMap, Client, Response};
 use syndication::Feed;
 
 pub struct FeedFetcher<'a> {
@@ -18,18 +18,27 @@ impl FeedFetcher<'_> {
             .build()
             .unwrap();
 
-            FeedFetcher { url, client }
+        FeedFetcher { url, client }
     }
 
-    pub async fn fetch(self, last_modified: Option<&DateTime<Utc>>) -> Option<Feed> {
+    pub async fn fetch(
+        &self,
+        last_modified: Option<DateTime<Utc>>,
+    ) -> Option<FeedFetcherFetchResult> {
         let source = self.get_feed(last_modified).await;
 
         match source {
             Ok(source) => {
-                let feed = source?.parse::<Feed>();
+                let source = source?;
+                let feed = source.body.parse::<Feed>();
+
+                let new_last_modified = source.last_modified;
 
                 match feed {
-                    Ok(feed) => Some(feed),
+                    Ok(feed) => Some(FeedFetcherFetchResult {
+                        feed: feed,
+                        last_modified: new_last_modified,
+                    }),
                     Err(err) => {
                         print!("{}", err);
 
@@ -46,9 +55,9 @@ impl FeedFetcher<'_> {
     }
 
     async fn get_feed(
-        self,
-        last_modified: Option<&DateTime<Utc>>,
-    ) -> Result<Option<String>, impl Error> {
+        &self,
+        last_modified: Option<DateTime<Utc>>,
+    ) -> Result<Option<HttpFetchResult>, impl Error> {
         let mut headers = HeaderMap::with_capacity(1);
 
         if let Some(last_modified) = last_modified {
@@ -66,12 +75,37 @@ impl FeedFetcher<'_> {
             .await?
             .error_for_status()?;
 
+        let new_last_modified = get_last_modified(&result);
+
         if result.status() == 304 {
             Ok(None)
         } else if result.status().is_success() {
-            result.text().await.map(|x| Some(x))
+            result.text().await.map(|x| {
+                Some(HttpFetchResult {
+                    body: x,
+                    last_modified: new_last_modified,
+                })
+            })
         } else {
             Ok(None)
         }
     }
+}
+
+fn get_last_modified(response: &Response) -> Option<DateTime<Utc>> {
+    Some(
+        DateTime::parse_from_rfc2822(&response.headers().get("Last-Modified")?.to_str().ok()?)
+            .ok()?
+            .to_utc(),
+    )
+}
+
+pub struct FeedFetcherFetchResult {
+    pub feed: Feed,
+    pub last_modified: Option<DateTime<Utc>>,
+}
+
+struct HttpFetchResult {
+    body: String,
+    last_modified: Option<DateTime<Utc>>,
 }
