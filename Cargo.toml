@@ -5,6 +5,13 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
 [dependencies]
 syndication = { git = "https://github.com/parksb/syndication.git", rev = "e15643d3e79ad6817af83375a4ad69b0d254e3e8" }
 rss = { version = "2.0.7", default-features = false }
