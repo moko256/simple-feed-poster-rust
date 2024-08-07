@@ -12,8 +12,16 @@ mod sleep;
 
 use std::env;
 
+use moko256_systemd_stdio_logger as logger;
+
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
+    logger::init([
+        logger::LoggerModuleFilterKey::Module(module_path!(), log::LevelFilter::Info),
+        logger::LoggerModuleFilterKey::Default(log::LevelFilter::Warn),
+    ])
+    .unwrap();
+
     let args: Vec<String> = env::args().collect();
 
     let command = args.get(1);

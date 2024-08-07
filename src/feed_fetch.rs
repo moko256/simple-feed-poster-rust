@@ -1,6 +1,7 @@
 use std::error::Error;
 
 use chrono::{DateTime, Utc};
+use log::warn;
 use reqwest::{header::HeaderMap, Client, Response};
 use syndication::Feed;
 
@@ -40,14 +41,14 @@ impl FeedFetcher<'_> {
                         last_modified: new_last_modified,
                     }),
                     Err(err) => {
-                        print!("{}", err);
+                        warn!("{}", err);
 
                         None
                     }
                 }
             }
             Err(err) => {
-                print!("{}", err);
+                warn!("{}", err);
 
                 None
             }

@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use log::{error, info};
 
 use crate::{
     config::Config, feed_diff::FeedDiffManager, feed_fetch::FeedFetcher,
@@ -15,7 +16,7 @@ pub async fn app_main(_args: &[String], config: &Config) {
 
     let schedules = Schedules::parse(&config.cron).unwrap();
 
-    println!("Starting…");
+    info!("Starting…");
 
     loop {
         let fetch_result = feed_fetcher.fetch(last_modified).await;
@@ -31,9 +32,11 @@ pub async fn app_main(_args: &[String], config: &Config) {
                     let message = feed_format(v);
                     let result = misskey_post.post(&message).await;
 
-                    println!("{}", message);
                     if let Err(err) = result {
-                        println!("Error: {}", err);
+                        error!("Error: {}", err);
+                        error!("Failed to post: {}", message);
+                    } else {
+                        info!("{}", message);
                     }
                 }
             }
@@ -41,7 +44,7 @@ pub async fn app_main(_args: &[String], config: &Config) {
             last_modified = fetch_result.last_modified;
         }
 
-        println!("Fetched. {}", Utc::now());
+        info!("Fetched. {}", Utc::now());
 
         let next = schedules.upcoming_next().unwrap();
         sleep_at(next).await;
